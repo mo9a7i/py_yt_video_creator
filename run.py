@@ -1,45 +1,60 @@
 # 1.
-import os, sys
+import os, sys, datetime
 from moviepy.editor import *
 
 from sclib import SoundcloudAPI, Track, Playlist
+from Google import Create_Service
+from googleapiclient.http import MediaFileUpload
+
+# GLOBAL
+CLIENT_SECRET_FILE = 'client_secret.json'
+API_NAME = 'youtube'
+API_VERSION = 'v3'
+SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
 
 
-# Argument 1 is the sound link, argument two is the image filename
-
-print(sys.argv[1])
-print(sys.argv[2])
-
-
-# To Download a soundcloud audio
-api = SoundcloudAPI()  # never pass a Soundcloud client ID that did not come from this library
-
+# download a soundcloud audio
+api = SoundcloudAPI()
 track = api.resolve(sys.argv[1])
-
 assert type(track) is Track
-
 sc_filename = f'./{track.artist} - {track.title}.mp3'
-
 with open(sc_filename, 'wb+') as fp:
     track.write_mp3_to(fp)
 
-
-# https://soundcloud.com/free-beats-io/out-of-sadness
-
-
-
-
-
-
-# 2.
-# audio = AudioFileClip(sys.argv[1])
+# adding the audio and background image together
 audio = AudioFileClip(sc_filename)
-image = ImageClip(sys.argv[2]).set_duration(audio.duration)
-
-video = image.set_audio(audio)
-outfile = f"{os.path.splitext(sc_filename)[0]}_with_image.mp4" # 3.
-
+background = ImageClip(sys.argv[2]).set_duration(audio.duration)
+video = background.set_audio(audio)
+outfile = f"{os.path.splitext(sc_filename)[0]}.mp4" # 3.
 video.write_videofile(outfile, fps=1)
 
-# Use line below if you want to preserve the name of both files.
-# 1. outfile = f"{os.path.splitext(sys.argv[1])[0]}_with_image_{os.path.splitext(sys.argv[2])[0]}.mp4"
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+# upload_date_time = datetime.datetime(2020, 12, 25, 12, 30, 0).isoformat() + '.000Z'
+request_body = {
+    'snippet': {
+        'categoryI': 19,
+        'title': f'{track.artist} - {track.title}',
+        'description': 'This video was created automatically by an AI agent by Eng. Dr. MD. Wsaam',
+        'tags': ['Travel', 'video test', 'Travel Tips']
+    },
+    'status': {
+        'privacyStatus': 'public',
+        'selfDeclaredMadeForKids': False,
+    },
+    'notifySubscribers': False
+}
+
+mediaFile = MediaFileUpload(outfile)
+
+response_upload = service.videos().insert(
+    part='snippet,status',
+    body=request_body,
+    media_body=mediaFile
+).execute()
+
+
+service.thumbnails().set(
+    videoId=response_upload.get('id'),
+    media_body=MediaFileUpload('thumbnail.png')
+).execute()
+
