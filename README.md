@@ -5,10 +5,9 @@
   ## Todo
 
   - [ ] Find an Audio Visualizer
-    - [ ] 
   - [ ] Link with a wallpapers `royalty free` website to get image
-  - [x] give the video a SoundCloud link to extract audio
-  - [x] Link with YouTube API
+  - [ ] give the video a SoundCloud link to extract audio
+  - [ ] Link with YouTube API
   - [ ] Add small text to the bottom right
 
   
@@ -30,10 +29,3 @@
   * https://pypi.org/project/soundcloud-lib/
   * https://github.com/Miserlou/SoundScrape
   * 
-
-
-
-## Content From
-
-- https://www.soundcloud.com
-- https://www.pexels.com/videos/                        Keywords: `music, loud, vibrate, 
