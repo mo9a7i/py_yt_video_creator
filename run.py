@@ -1,10 +1,17 @@
 # 1.
+import IPython.display as ipd
+import librosa
+import librosa.display
+import matplotlib.pyplot as plt
+import numpy
+
 import os, sys, datetime, requests
 from moviepy import video as my_video_py
 from moviepy.editor import *
 from sclib import SoundcloudAPI, Track, Playlist
 from Google import Create_Service
 from googleapiclient.http import MediaFileUpload
+
 
 # Sample:
 # py .\run.py 1 https://soundcloud.com/free-beats-io/out-of-sadness "https://vod-progressive.akamaized.net/exp=1599861906~acl=%2Fvimeo-prod-skyfire-std-us%2F01%2F4371%2F14%2F371855028%2F1544389777.mp4~hmac=814872fd8704ccd9196e70f65c5fc493e61408cf4dc7bbe625b7ee6107b326d7/vimeo-prod-skyfire-std-us/01/4371/14/371855028/1544389777.mp4?download=1&filename=MyFileName.mp4"
@@ -14,6 +21,10 @@ CLIENT_SECRET_FILE = 'client_secret.json'
 API_NAME = 'youtube'
 API_VERSION = 'v3'
 SCOPES = ['https://www.googleapis.com/auth/youtube.upload']
+
+DEST_FOLDER = "working_directory/destination_files/"
+SRC_FOLDER = "working_directory/source_files/"
+
 
 # Take from the user argument 1, either 1 image, 2 video, 3 visuallizer, based on the input, excute a certain function
 # Take from the user argument 2, the value for argument 1 selection
@@ -69,13 +80,13 @@ def upload_file(outfile):
 
 def download_video(BACKGROUND_URL):
     r = requests.get(BACKGROUND_URL, allow_redirects=True)
-    background_file_name = "working_directory/source_files/INPUT_VIDEO.mp4"
+    background_file_name = SRC_FOLDER + "INPUT_VIDEO.mp4"
     open(background_file_name, 'wb').write(r.content)
     return VideoFileClip(background_file_name)
 
 def download_image(BACKGROUND_URL):
     r = requests.get(BACKGROUND_URL, allow_redirects=True)
-    background_file_name = "working_directory/source_files/INPUT_VIDEO.mp4"
+    background_file_name = SRC_FOLDER + "INPUT_VIDEO.mp4"
     open(background_file_name, 'wb').write(r.content)
     return background_file_name
 
@@ -111,6 +122,41 @@ def execute(TYPE_OF_BACKGROUND, BACKGROUND_URL, TYPE_OF_SOUND, SOUND_URL):
     else:
         print("Invalid selection of sound provider")
         sys.exit()
+
+
+
+    ## Test visuallizer
+    # Testing visuallizer
+    ipd.Audio(SOUND_FILE_NAME)
+    plt.figure(figsize=(15,4))
+    data,sample_rate1 = librosa.load(SOUND_FILE_NAME, sr=22050, mono=True, offset=0.0, duration=50, res_type='kaiser_best')
+    print(data.shape, sample_rate1)
+
+    librosa.display.waveplot(data,sr=sample_rate1, max_points=50000.0, x_axis='time', offset=0.0, max_sr=1000)
+    plt.show()
+    stft_array = librosa.stft(data)
+    stft_array_db = librosa.amplitude_to_db(abs(stft_array))
+
+
+    numpy.savetxt(SRC_FOLDER + "stft_array_db.csv", stft_array_db, delimiter=",")
+
+
+
+    librosa.display.specshow(stft_array_db,sr=sample_rate1,x_axis='time', y_axis='hz')
+    plt.colorbar()
+    plt.show()
+
+
+
+
+    sys.exit()
+
+
+
+
+
+
+
 
 
     # Get the Audio
@@ -161,7 +207,7 @@ def execute(TYPE_OF_BACKGROUND, BACKGROUND_URL, TYPE_OF_SOUND, SOUND_URL):
     print(type(AUDIO_DURATION))
 
     BACKGROUND.set_audio(AUDIO)
-    OUT_FILE_NAME = "working_directory/destination_files/OUTPUT_FILE.mp4"
+    OUT_FILE_NAME = DEST_FOLDER + "OUTPUT_FILE.mp4"
     BACKGROUND.write_videofile(OUT_FILE_NAME, fps=VIDEO_FPS)
 
 
